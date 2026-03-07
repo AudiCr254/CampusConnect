@@ -15,15 +15,15 @@ import { notes as staticNotes } from '@/data/notes';
 
 // Static topics for fallback
 const staticTopics: Topic[] = [
-  { id: '1', name: 'Introduction to Accounting', description: 'Learn the fundamentals of accounting', color: '#3b82f6' },
-  { id: '2', name: 'Recording Transactions', description: 'Master source documents and journals', color: '#10b981' },
-  { id: '3', name: 'Financial Statements', description: 'Understand income statements and balance sheets', color: '#8b5cf6' },
-  { id: '4', name: 'Assets & Liabilities', description: 'Learn about depreciation and PPE', color: '#f97316' },
-  { id: '5', name: 'Partnership Accounts', description: 'Study partnership agreements', color: '#ec4899' },
-  { id: '6', name: 'Company Accounts', description: 'Explore share capital', color: '#6366f1' },
-  { id: '7', name: 'Manufacturing Accounts', description: 'Learn cost classification', color: '#14b8a6' },
-  { id: '8', name: 'Non-Profit Organizations', description: 'Understand receipts and payments', color: '#ef4444' },
-  { id: '9', name: 'Correction of Errors', description: 'Master suspense accounts', color: '#eab308' },
+  { id: '1', unit_id: 'unit1', name: 'Introduction to Accounting', description: 'Learn the fundamentals of accounting', color: '#3b82f6', created_at: '' },
+  { id: '2', unit_id: 'unit1', name: 'Recording Transactions', description: 'Master source documents and journals', color: '#10b981', created_at: '' },
+  { id: '3', unit_id: 'unit2', name: 'Financial Statements', description: 'Understand income statements and balance sheets', color: '#8b5cf6', created_at: '' },
+  { id: '4', unit_id: 'unit2', name: 'Assets & Liabilities', description: 'Learn about depreciation and PPE', color: '#f97316', created_at: '' },
+  { id: '5', unit_id: 'unit3', name: 'Partnership Accounts', description: 'Study partnership agreements', color: '#ec4899', created_at: '' },
+  { id: '6', unit_id: 'unit3', name: 'Company Accounts', description: 'Explore share capital', color: '#6366f1', created_at: '' },
+  { id: '7', unit_id: 'unit4', name: 'Manufacturing Accounts', description: 'Learn cost classification', color: '#14b8a6', created_at: '' },
+  { id: '8', unit_id: 'unit4', name: 'Non-Profit Organizations', description: 'Understand receipts and payments', color: '#ef4444', created_at: '' },
+  { id: '9', unit_id: 'unit5', name: 'Correction of Errors', description: 'Master suspense accounts', color: '#eab308', created_at: '' },
 ];
 
 export function NotesPage() {
@@ -68,7 +68,9 @@ export function NotesPage() {
             title: n.title,
             description: n.content.substring(0, 100) + '...',
             content: n.content,
+            unit_id: n.unit_id || 'unit1',
             topic_id: n.topicId,
+            note_type: 'topic' as const,
             created_at: new Date().toISOString(),
           })));
         }
@@ -82,7 +84,9 @@ export function NotesPage() {
           title: n.title,
           description: n.content.substring(0, 100) + '...',
           content: n.content,
+          unit_id: n.unit_id || 'unit1',
           topic_id: n.topicId,
+          note_type: 'topic' as const,
           created_at: new Date().toISOString(),
         })));
       } finally {
@@ -281,7 +285,7 @@ export function NotesPage() {
                       backgroundColor: topics.find((t) => t.id === selectedNote.topic_id)?.color,
                     }}
                   >
-                    {topics.find((t) => t.id === selectedNote.topic_id)?.name}
+                    {topics.find((t) => t.id === selectedNote?.topic_id)?.name}
                   </span>
                 )}
               </div>
