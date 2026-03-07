@@ -1,0 +1,17 @@
+{
+  "name": "campusconnect",
+  "version": "1.0.0",
+  "description": "CampusConnect - Full Stack Accounting Study Platform",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../app && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd app && npm run dev\"",
+    "build": "cd app && npm run build",
+    "start": "cd backend && npm start",
+    "setup:db": "mysql -u root -p < backend/database/schema.sql"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "author": "Audi Godfrey",
+  "license": "MIT"
+}
