@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Calculator, Sparkles, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,17 +9,8 @@ const navLinks = [
 ];
 
 export function Navigation() {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50);
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   const isActive = (href: string) => {
     if (href === '/') return location.pathname === '/';
@@ -28,13 +19,7 @@ export function Navigation() {
 
   return (
     <>
-      <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled
-            ? 'bg-white/90 backdrop-blur-lg shadow-lg'
-            : 'bg-transparent'
-        }`}
-      >
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
@@ -42,9 +27,7 @@ export function Navigation() {
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
                 <Calculator className="w-6 h-6 text-white" />
               </div>
-              <span className={`font-bold text-lg lg:text-xl transition-colors ${
-                isScrolled ? 'text-blue-900' : 'text-blue-900'
-              }`}>
+              <span className="font-bold text-lg lg:text-xl text-blue-900">
                 CampusConnect
               </span>
             </Link>
@@ -58,8 +41,6 @@ export function Navigation() {
                   className={`relative font-medium transition-colors link-underline ${
                     isActive(link.href)
                       ? 'text-blue-600'
-                      : isScrolled
-                      ? 'text-gray-700 hover:text-blue-600'
                       : 'text-gray-700 hover:text-blue-600'
                   }`}
                 >
