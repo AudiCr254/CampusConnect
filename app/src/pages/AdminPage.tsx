@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
   Shield,
   Plus,
@@ -15,7 +14,6 @@ import {
   AlertCircle,
   LogOut,
   Save,
-  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -44,26 +42,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { fetchNotes, addNote, updateNote, deleteNote, fetchTopics, type Note, type Topic } from '@/services/firestore';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-interface Topic {
-  id: number;
-  name: string;
-  color: string;
-  icon: string;
-}
-
-interface Note {
-  id: number;
-  title: string;
-  description: string;
-  content?: string;
-  topic_id: number;
-  topic_name?: string;
-  topic_color?: string;
-  created_at: string;
-}
+const ADMIN_KEY = 'Audi_111K254';
 
 interface NoteFormData {
   title: string;
@@ -80,7 +61,7 @@ const emptyForm: NoteFormData = {
 };
 
 // ─── Admin Login Screen ───────────────────────────────────────────────────────
-function LoginScreen({ onLogin }: { onLogin: (key: string) => void }) {
+function LoginScreen({ onLogin }: { onLogin: () => void }) {
   const [key, setKey] = useState('');
   const [showKey, setShowKey] = useState(false);
   const [error, setError] = useState('');
@@ -91,86 +72,72 @@ function LoginScreen({ onLogin }: { onLogin: (key: string) => void }) {
     if (!key.trim()) return;
     setLoading(true);
     setError('');
-    try {
-      const res = await fetch(`${API_BASE}/topics`, {
-        headers: { 'x-admin-key': key },
-      });
-      if (res.ok) {
-        onLogin(key);
-      } else {
-        setError('Invalid admin key. Please try again.');
-      }
-    } catch {
-      // If backend is offline, still allow entry with any non-empty key
-      // so the admin can manage static notes
-      onLogin(key);
-    } finally {
-      setLoading(false);
+    
+    // Verify the admin key
+    if (key === ADMIN_KEY) {
+      onLogin();
+    } else {
+      setError('Invalid admin key. Please try again.');
     }
+    setLoading(false);
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-slate-900 flex items-center justify-center p-4">
+    <main className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center mx-auto mb-4 shadow-lg">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-orange-100">
+          <div className="flex justify-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-lg">
               <Shield className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Panel</h1>
-            <p className="text-gray-500 mt-1 text-sm">
-              Enter your admin key to manage CampusConnect notes
-            </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="adminKey" className="text-sm font-medium text-gray-700">
+          <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">
+            Admin Panel
+          </h1>
+          <p className="text-center text-gray-600 mb-8">
+            CampusConnect Management
+          </p>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <Label htmlFor="key" className="text-gray-700 font-medium mb-2 block">
                 Admin Key
               </Label>
               <div className="relative">
-                <Input
-                  id="adminKey"
+                <input
+                  id="key"
                   type={showKey ? 'text' : 'password'}
                   value={key}
                   onChange={(e) => setKey(e.target.value)}
-                  placeholder="Enter your admin key..."
-                  className="pr-10 border-gray-300 focus:ring-blue-500"
-                  required
+                  placeholder="Enter your admin key"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent"
                 />
                 <button
                   type="button"
                   onClick={() => setShowKey(!showKey)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                 >
-                  {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showKey ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-                <XCircle className="w-4 h-4 flex-shrink-0" />
-                {error}
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
+                <XCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
             <Button
               type="submit"
-              disabled={!key.trim() || loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-semibold py-3 rounded-lg transition-all duration-300"
             >
-              {loading ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Shield className="w-4 h-4 mr-2" />
-              )}
               {loading ? 'Verifying...' : 'Access Admin Panel'}
             </Button>
           </form>
-
-
         </div>
       </div>
     </main>
@@ -184,81 +151,54 @@ function NoteFormDialog({
   onSave,
   topics,
   editNote,
-  adminKey,
 }: {
   open: boolean;
   onClose: () => void;
   onSave: () => void;
   topics: Topic[];
   editNote: Note | null;
-  adminKey: string;
 }) {
   const [form, setForm] = useState<NoteFormData>(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   useEffect(() => {
     if (editNote) {
       setForm({
-        title: editNote.title || '',
-        description: editNote.description || '',
-        content: editNote.content || '',
-        topic_id: editNote.topic_id?.toString() || '',
+        title: editNote.title,
+        description: editNote.description,
+        content: editNote.content,
+        topic_id: editNote.topic_id,
       });
     } else {
       setForm(emptyForm);
     }
-    setError('');
-    setSuccess('');
   }, [editNote, open]);
 
-  const handleChange = (field: keyof NoteFormData, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!form.title.trim()) {
-      setError('Title is required.');
-      return;
-    }
+  const handleSave = async () => {
+    if (!form.title.trim() || !form.topic_id) return;
     setSaving(true);
-    setError('');
-    setSuccess('');
 
     try {
-      const url = editNote ? `${API_BASE}/notes/${editNote.id}` : `${API_BASE}/notes`;
-      const method = editNote ? 'PUT' : 'POST';
-
-      const body: Record<string, string> = {
-        title: form.title,
-        description: form.description,
-        content: form.content,
-      };
-      if (form.topic_id) body.topic_id = form.topic_id;
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': adminKey,
-        },
-        body: JSON.stringify(body),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setSuccess(editNote ? 'Note updated successfully!' : 'Note created successfully!');
-        setTimeout(() => {
-          onSave();
-          onClose();
-        }, 1000);
+      if (editNote) {
+        await updateNote(editNote.id, {
+          title: form.title,
+          description: form.description,
+          content: form.content,
+          topic_id: form.topic_id,
+        } as Partial<Note>);
       } else {
-        setError(data.message || 'Failed to save note.');
+        await addNote({
+          title: form.title,
+          description: form.description,
+          content: form.content,
+          topic_id: form.topic_id,
+          created_at: new Date().toISOString(),
+        } as any);
       }
-    } catch {
-      setError('Could not connect to backend. Please ensure the server is running.');
+      onSave();
+      onClose();
+    } catch (error) {
+      console.error('Error saving note:', error);
     } finally {
       setSaving(false);
     }
@@ -268,328 +208,182 @@ function NoteFormDialog({
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-lg font-bold">
-            <FileText className="w-5 h-5 text-blue-600" />
-            {editNote ? 'Edit Note' : 'Add New Note'}
-          </DialogTitle>
+          <DialogTitle>{editNote ? 'Edit Note' : 'Add New Note'}</DialogTitle>
           <DialogDescription>
-            {editNote
-              ? 'Update the details of this study note.'
-              : 'Fill in the details to add a new study note to CampusConnect.'}
+            {editNote ? 'Update the note details below.' : 'Fill in the details to create a new note.'}
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5 mt-2">
-          {/* Title */}
-          <div className="space-y-1.5">
-            <Label htmlFor="title" className="text-sm font-medium">
-              Title <span className="text-red-500">*</span>
-            </Label>
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="title">Title</Label>
             <Input
               id="title"
               value={form.title}
-              onChange={(e) => handleChange('title', e.target.value)}
-              placeholder="e.g., Introduction to Double-Entry Bookkeeping"
-              required
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              placeholder="Note title"
             />
           </div>
 
-          {/* Topic */}
-          <div className="space-y-1.5">
-            <Label className="text-sm font-medium">Topic</Label>
-            <Select
-              value={form.topic_id}
-              onValueChange={(val) => handleChange('topic_id', val)}
-            >
+          <div>
+            <Label htmlFor="topic">Topic</Label>
+            <Select value={form.topic_id} onValueChange={(value) => setForm({ ...form, topic_id: value })}>
               <SelectTrigger>
-                <SelectValue placeholder="Select a topic..." />
+                <SelectValue placeholder="Select a topic" />
               </SelectTrigger>
               <SelectContent>
-                {topics.map((t) => (
-                  <SelectItem key={t.id} value={t.id.toString()}>
-                    {t.name}
+                {topics.map((topic) => (
+                  <SelectItem key={topic.id} value={topic.id}>
+                    {topic.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Description */}
-          <div className="space-y-1.5">
-            <Label htmlFor="description" className="text-sm font-medium">
-              Short Description
-            </Label>
+          <div>
+            <Label htmlFor="description">Description</Label>
             <Input
               id="description"
               value={form.description}
-              onChange={(e) => handleChange('description', e.target.value)}
-              placeholder="Brief summary of this note..."
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              placeholder="Brief description"
             />
           </div>
 
-          {/* Content */}
-          <div className="space-y-1.5">
-            <Label htmlFor="content" className="text-sm font-medium">
-              Note Content
-            </Label>
+          <div>
+            <Label htmlFor="content">Content</Label>
             <textarea
               id="content"
               value={form.content}
-              onChange={(e) => handleChange('content', e.target.value)}
-              placeholder="Write the full note content here. Markdown is supported..."
-              rows={12}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 resize-y font-mono"
+              onChange={(e) => setForm({ ...form, content: e.target.value })}
+              placeholder="Full note content (supports Markdown)"
+              className="w-full h-48 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
             />
-            <p className="text-xs text-gray-400">
-              Markdown formatting is supported (e.g., **bold**, # Heading, | table |)
-            </p>
           </div>
 
-          {/* Feedback */}
-          {error && (
-            <div className="flex items-start gap-2 p-3 bg-red-50 text-red-700 rounded-lg text-sm">
-              <XCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="flex items-center gap-2 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
-              <CheckCircle className="w-4 h-4 flex-shrink-0" />
-              {success}
-            </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-2">
-            <Button
-              type="submit"
-              disabled={saving}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              ) : (
-                <Save className="w-4 h-4 mr-2" />
-              )}
-              {saving ? 'Saving...' : editNote ? 'Update Note' : 'Add Note'}
-            </Button>
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
-              <X className="w-4 h-4 mr-2" />
+          <div className="flex gap-3 justify-end pt-4">
+            <Button variant="outline" onClick={onClose} disabled={saving}>
               Cancel
             </Button>
+            <Button
+              onClick={handleSave}
+              disabled={saving || !form.title.trim() || !form.topic_id}
+              className="bg-orange-600 hover:bg-orange-700 text-white"
+            >
+              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+              {saving ? 'Saving...' : 'Save Note'}
+            </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );
 }
 
-// ─── Main Admin Dashboard ─────────────────────────────────────────────────────
-function AdminDashboard({ adminKey, onLogout }: { adminKey: string; onLogout: () => void }) {
-  const navigate = useNavigate();
+// ─── Admin Dashboard ──────────────────────────────────────────────────────────
+function AdminDashboard({ onLogout }: { onLogout: () => void }) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isOffline, setIsOffline] = useState(false);
-
   const [formOpen, setFormOpen] = useState(false);
   const [editNote, setEditNote] = useState<Note | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Note | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [toast, setToast] = useState<{ type: 'success' | 'error'; msg: string } | null>(null);
-
-  const showToast = (type: 'success' | 'error', msg: string) => {
-    setToast({ type, msg });
-    setTimeout(() => setToast(null), 3500);
-  };
-
-  const fetchData = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const [notesRes, topicsRes] = await Promise.all([
-        fetch(`${API_BASE}/notes`, { headers: { 'x-admin-key': adminKey } }),
-        fetch(`${API_BASE}/topics`),
-      ]);
-      const notesData = await notesRes.json();
-      const topicsData = await topicsRes.json();
-      if (notesData.success) setNotes(notesData.data || []);
-      if (topicsData.success) setTopics(topicsData.data || []);
-      setIsOffline(false);
-    } catch {
-      setIsOffline(true);
-      setError('Backend server is offline. Showing static fallback data.');
-      // Load static fallback
-      const { notes: staticNotes } = await import('@/data/notes');
-      const staticTopics = [
-        { id: 1, name: 'Introduction to Accounting', color: '#3b82f6', icon: 'BookOpen' },
-        { id: 2, name: 'Recording Transactions', color: '#10b981', icon: 'FileText' },
-        { id: 3, name: 'Financial Statements', color: '#8b5cf6', icon: 'BarChart3' },
-        { id: 4, name: 'Assets & Liabilities', color: '#f97316', icon: 'Building2' },
-        { id: 5, name: 'Partnership Accounts', color: '#ec4899', icon: 'Users' },
-        { id: 6, name: 'Company Accounts', color: '#6366f1', icon: 'Building' },
-        { id: 7, name: 'Manufacturing Accounts', color: '#14b8a6', icon: 'Factory' },
-        { id: 8, name: 'Non-Profit Organizations', color: '#ef4444', icon: 'Heart' },
-        { id: 9, name: 'Correction of Errors', color: '#eab308', icon: 'AlertCircle' },
-      ];
-      setTopics(staticTopics);
-      setNotes(
-        staticNotes.map((n, i) => ({
-          id: i + 1,
-          title: n.title,
-          description: n.content.substring(0, 120) + '...',
-          content: n.content,
-          topic_id: parseInt(n.topicId) || 1,
-          topic_name: staticTopics.find((t) => t.id === (parseInt(n.topicId) || 1))?.name,
-          created_at: new Date().toISOString(),
-        }))
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
     fetchData();
   }, []);
 
+  const fetchData = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [notesData, topicsData] = await Promise.all([fetchNotes(), fetchTopics()]);
+      setNotes(notesData);
+      setTopics(topicsData);
+    } catch (err) {
+      console.error('Error fetching data:', err);
+      setError('Failed to load data from Firestore');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`${API_BASE}/notes/${deleteTarget.id}`, {
-        method: 'DELETE',
-        headers: { 'x-admin-key': adminKey },
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast('success', `"${deleteTarget.title}" deleted successfully.`);
-        fetchData();
-      } else {
-        showToast('error', data.message || 'Failed to delete note.');
-      }
-    } catch {
-      showToast('error', 'Could not connect to backend.');
+      await deleteNote(deleteTarget.id);
+      setNotes(notes.filter((n) => n.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      setError('Failed to delete note');
     } finally {
       setDeleting(false);
-      setDeleteTarget(null);
     }
   };
 
   const topicMap = Object.fromEntries(topics.map((t) => [t.id, t]));
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      {/* Top Bar */}
-      <div className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-gray-900 text-base leading-tight">Admin Panel</h1>
-              <p className="text-xs text-gray-500">CampusConnect Management</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/notes')}
-              className="hidden sm:flex items-center gap-1.5"
-            >
-              <BookOpen className="w-4 h-4" />
-              View Site
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onLogout}
-              className="text-gray-600 hover:text-red-600"
-            >
-              <LogOut className="w-4 h-4 mr-1.5" />
-              Logout
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`fixed top-20 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl shadow-lg text-sm font-medium transition-all ${
-            toast.type === 'success'
-              ? 'bg-green-600 text-white'
-              : 'bg-red-600 text-white'
-          }`}
-        >
-          {toast.type === 'success' ? (
-            <CheckCircle className="w-4 h-4" />
-          ) : (
-            <XCircle className="w-4 h-4" />
-          )}
-          {toast.msg}
-        </div>
-      )}
-
+    <main className="min-h-screen bg-gradient-to-br from-orange-50 to-amber-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          {[
-            { label: 'Total Notes', value: notes.length, color: 'blue' },
-            { label: 'Topics', value: topics.length, color: 'purple' },
-            {
-              label: 'Recent (7d)',
-              value: notes.filter(
-                (n) =>
-                  new Date(n.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
-              ).length,
-              color: 'green',
-            },
-            { label: 'Status', value: isOffline ? 'Offline' : 'Online', color: isOffline ? 'red' : 'green' },
-          ].map((s) => (
-            <div key={s.label} className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
-              <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">{s.label}</p>
-              <p
-                className={`text-2xl font-bold mt-1 ${
-                  s.color === 'blue'
-                    ? 'text-blue-600'
-                    : s.color === 'purple'
-                    ? 'text-purple-600'
-                    : s.color === 'green'
-                    ? 'text-green-600'
-                    : 'text-red-600'
-                }`}
-              >
-                {s.value}
-              </p>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-          ))}
-        </div>
-
-        {/* Offline warning */}
-        {isOffline && (
-          <div className="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl mb-6 text-sm text-amber-800">
-            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div>
-              <strong>Backend Offline:</strong> The Express.js server is not running. Notes shown are
-              static fallback data. Start the backend with{' '}
-              <code className="bg-amber-100 px-1 rounded">cd backend && npm start</code> to enable
-              full CRUD operations.
+              <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
+              <p className="text-sm text-gray-600">CampusConnect Management</p>
             </div>
           </div>
-        )}
+          <Button
+            onClick={onLogout}
+            variant="outline"
+            className="border-orange-300 text-orange-600 hover:bg-orange-50"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-orange-100">
+            <p className="text-gray-600 text-sm font-medium">TOTAL NOTES</p>
+            <p className="text-3xl font-bold text-orange-600 mt-2">{notes.length}</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-orange-100">
+            <p className="text-gray-600 text-sm font-medium">TOPICS</p>
+            <p className="text-3xl font-bold text-orange-600 mt-2">{topics.length}</p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-orange-100">
+            <p className="text-gray-600 text-sm font-medium">RECENT (7D)</p>
+            <p className="text-3xl font-bold text-orange-600 mt-2">
+              {notes.filter((n) => new Date(n.created_at).getTime() > Date.now() - 7 * 24 * 60 * 60 * 1000).length}
+            </p>
+          </div>
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-orange-100">
+            <p className="text-gray-600 text-sm font-medium">STATUS</p>
+            <p className="text-lg font-bold text-green-600 mt-2 flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              Online
+            </p>
+          </div>
+        </div>
 
         {/* Notes Management */}
-        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-          {/* Section Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="bg-white rounded-lg shadow-sm border border-orange-100 p-6">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
-              <FileText className="w-5 h-5 text-blue-600" />
-              <h2 className="font-semibold text-gray-900">Notes Management</h2>
-              <span className="ml-2 px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+              <BookOpen className="w-5 h-5 text-orange-600" />
+              <h2 className="text-xl font-bold text-gray-900">Notes Management</h2>
+              <span className="bg-orange-100 text-orange-700 text-xs font-semibold px-3 py-1 rounded-full">
                 {notes.length}
               </span>
             </div>
@@ -598,7 +392,7 @@ function AdminDashboard({ adminKey, onLogout }: { adminKey: string; onLogout: ()
                 setEditNote(null);
                 setFormOpen(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-orange-600 hover:bg-orange-700 text-white"
               size="sm"
             >
               <Plus className="w-4 h-4 mr-1.5" />
@@ -609,7 +403,7 @@ function AdminDashboard({ adminKey, onLogout }: { adminKey: string; onLogout: ()
           {/* Table */}
           {loading ? (
             <div className="flex items-center justify-center py-16">
-              <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+              <Loader2 className="w-8 h-8 animate-spin text-orange-600" />
             </div>
           ) : error && notes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-gray-500">
@@ -677,7 +471,7 @@ function AdminDashboard({ adminKey, onLogout }: { adminKey: string; onLogout: ()
                                 setEditNote(note);
                                 setFormOpen(true);
                               }}
-                              className="p-1.5 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                              className="p-1.5 rounded-lg text-gray-400 hover:text-orange-600 hover:bg-orange-50 transition-colors"
                               title="Edit note"
                             >
                               <Pencil className="w-4 h-4" />
@@ -710,11 +504,9 @@ function AdminDashboard({ adminKey, onLogout }: { adminKey: string; onLogout: ()
         }}
         onSave={() => {
           fetchData();
-          showToast('success', editNote ? 'Note updated!' : 'Note added successfully!');
         }}
         topics={topics}
         editNote={editNote}
-        adminKey={adminKey}
       />
 
       {/* Delete Confirmation */}
@@ -750,9 +542,9 @@ export default function AdminPage() {
     sessionStorage.getItem('cc_admin_key')
   );
 
-  const handleLogin = (key: string) => {
-    sessionStorage.setItem('cc_admin_key', key);
-    setAdminKey(key);
+  const handleLogin = () => {
+    sessionStorage.setItem('cc_admin_key', ADMIN_KEY);
+    setAdminKey(ADMIN_KEY);
   };
 
   const handleLogout = () => {
@@ -764,5 +556,5 @@ export default function AdminPage() {
     return <LoginScreen onLogin={handleLogin} />;
   }
 
-  return <AdminDashboard adminKey={adminKey} onLogout={handleLogout} />;
+  return <AdminDashboard onLogout={handleLogout} />;
 }
