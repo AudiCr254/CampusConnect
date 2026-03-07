@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Calculator, Twitter, Linkedin, Github, Heart } from 'lucide-react';
+import audiGodfreyImg from '@/assets/audi-godfrey.jpg';
+import audiLogoImg from '@/assets/audi-logo.png';
 
 const quickLinks = [
   { label: 'Home', href: '/' },
@@ -104,7 +106,7 @@ export function Footer() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-orange-400 ring-2 ring-orange-400/30">
                   <img
-                    src="/images/audi-godfrey.jpg"
+                    src={audiGodfreyImg}
                     alt="Audi Godfrey"
                     className="w-full h-full object-cover"
                   />
@@ -116,7 +118,7 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2 text-orange-300 text-sm">
                 <img
-                  src="/images/audi-logo.png"
+                  src={audiLogoImg}
                   alt="Audi Godfrey Logo"
                   className="w-6 h-6 object-contain"
                 />

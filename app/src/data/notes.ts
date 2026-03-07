@@ -682,14 +682,14 @@ export const features: Feature[] = [
     title: 'Comprehensive Study Notes',
     description: 'Access detailed, well-structured accounting notes covering all topics from basic principles to advanced financial reporting.',
     points: ['Topic-by-topic breakdown', 'Clear explanations', 'Real-world examples'],
-    image: '/images/logo.jpg',
+    image: new URL('../assets/logo.jpg', import.meta.url).href,
   },
   {
     id: 'ai',
     title: 'AI-Powered Learning',
     description: 'Get instant answers to your accounting questions with our AI assistant. Perfect for clarifying concepts and exam preparation.',
     points: ['24/7 availability', 'Instant responses', 'Concept clarification'],
-    image: '/images/campus-students.jpg',
+    image: new URL('../assets/campus-students.jpg', import.meta.url).href,
     reverse: true,
   },
   {
@@ -697,7 +697,7 @@ export const features: Feature[] = [
     title: 'Practice & Revision',
     description: 'Reinforce your learning with practice questions, worked examples, and revision materials for each topic.',
     points: ['Worked examples', 'Practice questions', 'Exam preparation'],
-    image: '/images/logo.jpg',
+    image: new URL('../assets/logo.jpg', import.meta.url).href,
   },
 ];
 

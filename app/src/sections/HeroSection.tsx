@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Search, ArrowRight, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import campusStudentsImg from '@/assets/campus-students.jpg';
 
 interface HeroSectionProps {
   searchQuery: string;
@@ -149,7 +150,7 @@ export function HeroSection({ searchQuery, onSearchChange, onSearch }: HeroSecti
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <div className="absolute inset-0 bg-gradient-to-t from-blue-900/20 to-transparent z-10" />
                 <img
-                  src="/images/campus-students.jpg"
+                  src={campusStudentsImg}
                   alt="Campus Students"
                   className="w-full h-auto object-cover"
                 />
