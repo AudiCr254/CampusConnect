@@ -1,0 +1,31 @@
+# CampusConnect robots.txt
+# Allow all search engines to crawl the site
+
+User-agent: *
+Allow: /
+Disallow: /admin
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+
+# Specific rules for other crawlers
+User-agent: Slurp
+Allow: /
+Disallow: /admin
+
+User-agent: DuckDuckBot
+Allow: /
+Disallow: /admin
+
+# Crawl delay (in seconds)
+Crawl-delay: 1
+
+# Sitemap location
+Sitemap: https://campusconnect.example.com/sitemap.xml
