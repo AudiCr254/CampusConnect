@@ -170,10 +170,7 @@ function LoginScreen({ onLogin }: { onLogin: (key: string) => void }) {
             </Button>
           </form>
 
-          <p className="text-center text-xs text-gray-400 mt-6">
-            The admin key is set in the backend <code className="bg-gray-100 px-1 rounded">.env</code> file as{' '}
-            <code className="bg-gray-100 px-1 rounded">ADMIN_KEY</code>
-          </p>
+
         </div>
       </div>
     </main>
