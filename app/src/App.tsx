@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Navigation } from '@/components/Navigation';
 import { Footer } from '@/components/Footer';
 import { FloatingAskAI } from '@/components/FloatingAskAI';
+import { ScrollToTop } from '@/components/ScrollToTop';
 import { HomePage } from '@/pages/HomePage';
 import { NotesPage } from '@/pages/NotesPage';
 import { AskAIPage } from '@/pages/AskAIPage';
@@ -39,6 +40,7 @@ function AppLayout() {
 function App() {
   return (
     <HashRouter>
+      <ScrollToTop />
       <AppLayout />
     </HashRouter>
   );
