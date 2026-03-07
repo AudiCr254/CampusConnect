@@ -8,6 +8,7 @@ import {
   doc,
   query,
   orderBy,
+  where,
 } from '@/lib/firebase';
 
 // ─── UNITS (Top-level categories) ───────────────────────────────────────────
@@ -17,6 +18,7 @@ export interface Unit {
   name: string;
   description: string;
   color: string;
+  file_path?: string; // Path to uploaded file
   created_at: string;
 }
 
@@ -77,6 +79,7 @@ export interface Topic {
   name: string;
   description: string;
   color: string;
+  file_path?: string; // Path to uploaded file
   created_at: string;
 }
 
@@ -206,6 +209,3 @@ export async function deleteNote(id: string): Promise<void> {
     throw error;
   }
 }
-
-// Import where for filtering
-import { where } from '@/lib/firebase';

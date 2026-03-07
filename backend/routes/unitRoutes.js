@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const path = require("path");
-const topicController = require("../controllers/topicController");
+const unitController = require("../controllers/unitController");
 const adminKey = require("../middleware/adminKey");
 
 // Configure multer for file uploads
@@ -21,7 +21,6 @@ const fileFilter = (req, file, cb) => {
     "application/pdf",
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    "application/vnd.ms-powerpoint",
     "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     "text/plain",
   ];
@@ -39,12 +38,12 @@ const upload = multer({
 });
 
 // Public routes
-router.get("/units/:unitId/topics", topicController.getTopicsByUnit);
-router.get("/topics/:id", topicController.getTopicById);
+router.get("/units", unitController.getAllUnits);
+router.get("/units/:id", unitController.getUnitById);
 
 // Admin-protected routes
-router.post("/topics", adminKey, upload.single("file"), topicController.createTopic);
-router.put("/topics/:id", adminKey, upload.single("file"), topicController.updateTopic);
-router.delete("/topics/:id", adminKey, topicController.deleteTopic);
+router.post("/units", adminKey, upload.single("file"), unitController.createUnit);
+router.put("/units/:id", adminKey, upload.single("file"), unitController.updateUnit);
+router.delete("/units/:id", adminKey, unitController.deleteUnit);
 
 module.exports = router;

@@ -48,6 +48,7 @@ import {
   fetchNotes, addNote, updateNote, deleteNote,
   type Unit, type Topic, type Note 
 } from '@/services/firestore';
+import { uploadUnitFile, updateUnitFile, uploadTopicFile, updateTopicFile } from '@/services/api';
 
 const ADMIN_KEY = 'Audi_111K254';
 
@@ -560,27 +561,72 @@ function UnitFormDialog({
   onSave: () => void;
   editUnit: Unit | null;
 }) {
-  const [form, setForm] = useState({ name: '', description: '', color: '#3b82f6' });
+  const [form, setForm] = useState({ name: '', description: '', color: '#3b82f6', file_path: '' });
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   useEffect(() => {
     if (editUnit) {
       setForm(editUnit);
     } else {
-      setForm({ name: '', description: '', color: '#3b82f6' });
+      setForm({ name: '', description: '', color: '#3b82f6', file_path: '' });
     }
+    setFile(null);
+    setUploadError('');
   }, [editUnit, open]);
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
+    setUploadError('');
 
     try {
+      let filePath = form.file_path;
+      
+      // Upload file if selected
+      if (file) {
+        try {
+          if (editUnit) {
+            const result = await updateUnitFile(editUnit.id, file, {
+              name: form.name,
+              description: form.description,
+              color: form.color,
+            });
+            filePath = result.file_path;
+          } else {
+            const result = await uploadUnitFile(file, {
+              name: form.name,
+              description: form.description,
+              color: form.color,
+            });
+            filePath = result.file_path;
+            // File upload already created the unit, so just update Firebase
+            await addUnit({
+              name: form.name,
+              description: form.description,
+              color: form.color,
+              file_path: filePath,
+              created_at: new Date().toISOString(),
+            } as Omit<Unit, 'id'>);
+            onSave();
+            onClose();
+            return;
+          }
+        } catch (error) {
+          setUploadError('Failed to upload file. Please try again.');
+          console.error('File upload error:', error);
+          setSaving(false);
+          return;
+        }
+      }
+      
       if (editUnit) {
-        await updateUnit(editUnit.id, form as Partial<Unit>);
+        await updateUnit(editUnit.id, { ...form, file_path: filePath } as Partial<Unit>);
       } else {
         await addUnit({
           ...form,
+          file_path: filePath,
           created_at: new Date().toISOString(),
         } as Omit<Unit, 'id'>);
       }
@@ -588,6 +634,7 @@ function UnitFormDialog({
       onClose();
     } catch (error) {
       console.error('Error saving unit:', error);
+      setUploadError('Failed to save unit. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -636,6 +683,25 @@ function UnitFormDialog({
             </div>
           </div>
 
+          <div>
+            <Label>Unit File (PDF, DOC, DOCX, PPT, PPTX, TXT)</Label>
+            <Input
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              disabled={saving}
+              className="cursor-pointer"
+            />
+            {file && <p className="text-xs text-green-600 mt-1">File selected: {file.name}</p>}
+          </div>
+
+          {uploadError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700">{uploadError}</p>
+            </div>
+          )}
+
           <div className="flex gap-3 justify-end pt-4">
             <Button variant="outline" onClick={onClose} disabled={saving}>
               Cancel
@@ -669,27 +735,73 @@ function TopicFormDialog({
   editTopic: Topic | null;
   selectedUnit: Unit | null;
 }) {
-  const [form, setForm] = useState({ name: '', description: '', color: '#10b981', unit_id: '' });
+  const [form, setForm] = useState({ name: '', description: '', color: '#10b981', unit_id: '', file_path: '' });
+  const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   useEffect(() => {
     if (editTopic) {
       setForm(editTopic);
     } else {
-      setForm({ name: '', description: '', color: '#10b981', unit_id: selectedUnit?.id || '' });
+      setForm({ name: '', description: '', color: '#10b981', unit_id: selectedUnit?.id || '', file_path: '' });
     }
+    setFile(null);
+    setUploadError('');
   }, [editTopic, selectedUnit, open]);
 
   const handleSave = async () => {
     if (!form.name.trim() || !form.unit_id) return;
     setSaving(true);
+    setUploadError('');
 
     try {
+      let filePath = form.file_path;
+      
+      // Upload file if selected
+      if (file) {
+        try {
+          if (editTopic) {
+            const result = await updateTopicFile(editTopic.id, file, {
+              name: form.name,
+              description: form.description,
+              unit_id: form.unit_id,
+            });
+            filePath = result.file_path;
+          } else {
+            const result = await uploadTopicFile(file, {
+              name: form.name,
+              description: form.description,
+              unit_id: form.unit_id,
+            });
+            filePath = result.file_path;
+            // File upload already created the topic, so just update Firebase
+            await addTopic({
+              name: form.name,
+              description: form.description,
+              color: form.color,
+              unit_id: form.unit_id,
+              file_path: filePath,
+              created_at: new Date().toISOString(),
+            } as Omit<Topic, 'id'>);
+            onSave();
+            onClose();
+            return;
+          }
+        } catch (error) {
+          setUploadError('Failed to upload file. Please try again.');
+          console.error('File upload error:', error);
+          setSaving(false);
+          return;
+        }
+      }
+      
       if (editTopic) {
-        await updateTopic(editTopic.id, form as Partial<Topic>);
+        await updateTopic(editTopic.id, { ...form, file_path: filePath } as Partial<Topic>);
       } else {
         await addTopic({
           ...form,
+          file_path: filePath,
           created_at: new Date().toISOString(),
         } as Omit<Topic, 'id'>);
       }
@@ -697,6 +809,7 @@ function TopicFormDialog({
       onClose();
     } catch (error) {
       console.error('Error saving topic:', error);
+      setUploadError('Failed to save topic. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -744,6 +857,25 @@ function TopicFormDialog({
               />
             </div>
           </div>
+
+          <div>
+            <Label>Topic File (PDF, DOC, DOCX, PPT, PPTX, TXT)</Label>
+            <Input
+              type="file"
+              accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
+              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              disabled={saving}
+              className="cursor-pointer"
+            />
+            {file && <p className="text-xs text-green-600 mt-1">File selected: {file.name}</p>}
+          </div>
+
+          {uploadError && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700">{uploadError}</p>
+            </div>
+          )}
 
           <div className="flex gap-3 justify-end pt-4">
             <Button variant="outline" onClick={onClose} disabled={saving}>

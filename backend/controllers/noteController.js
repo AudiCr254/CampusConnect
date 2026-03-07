@@ -1,104 +1,6 @@
-const { pool } = require('../config/db');
-const path = require('path');
-const fs = require('fs');
-
-/**
- * Add a new note (Admin only)
- * POST /api/notes
- */
-exports.addNote = async (req, res) => {
-  try {
-    const { title, description, topic_id, content } = req.body;
-    
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: 'Title is required'
-      });
-    }
-
-    let filePath = null;
-    if (req.file) {
-      filePath = req.file.path;
-    }
-
-    const sql = `INSERT INTO notes (title, description, topic_id, content, file_path, created_at)
-                 VALUES (?, ?, ?, ?, ?, NOW())`;
-
-    const [result] = await pool.query(sql, [
-      title,
-      description || null,
-      topic_id || null,
-      content || null,
-      filePath
-    ]);
-
-    res.status(201).json({
-      success: true,
-      message: 'Note uploaded successfully',
-      data: {
-        id: result.insertId,
-        title,
-        description
-      }
-    });
-  } catch (error) {
-    console.error('Error adding note:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to add note'
-    });
-  }
-};
-
-/**
- * Create a new note (alias for addNote)
- * POST /api/notes
- */
-exports.createNote = async (req, res) => {
-  try {
-    const { title, description, topic_id, content } = req.body;
-    
-    if (!title) {
-      return res.status(400).json({
-        success: false,
-        message: 'Title is required'
-      });
-    }
-
-    let filePath = null;
-    if (req.file) {
-      filePath = req.file.path;
-    }
-
-    const sql = `INSERT INTO notes (title, description, topic_id, content, file_path, created_at)
-                 VALUES (?, ?, ?, ?, ?, NOW())`;
-
-    const [result] = await pool.query(sql, [
-      title,
-      description || null,
-      topic_id || null,
-      content || null,
-      filePath
-    ]);
-
-    res.status(201).json({
-      success: true,
-      message: 'Note uploaded successfully',
-      data: {
-        id: result.insertId,
-        title,
-        description
-      }
-    });
-  } catch (error) {
-    console.error('Error adding note:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Failed to add note'
-    });
-  }
-};
+const { pool } = require("../config/db");
+const fs = require("fs");
+const path = require("path");
 
 /**
  * Get all notes
@@ -108,22 +10,23 @@ exports.getAllNotes = async (req, res) => {
   try {
     const [notes] = await pool.query(`
       SELECT n.id, n.title, n.description, n.created_at, n.topic_id,
-             t.name as topic_name, t.color as topic_color
+             t.name as topic_name, t.description as topic_description, t.unit_id,
+             u.name as unit_name
       FROM notes n
       LEFT JOIN topics t ON n.topic_id = t.id
+      LEFT JOIN units u ON t.unit_id = u.id
       ORDER BY n.created_at DESC
     `);
-
     res.json({
       success: true,
       count: notes.length,
       data: notes
     });
   } catch (error) {
-    console.error('Error fetching notes:', error);
+    console.error("Error fetching notes:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch notes'
+      message: "Failed to fetch notes"
     });
   }
 };
@@ -135,26 +38,26 @@ exports.getAllNotes = async (req, res) => {
 exports.getNotesByTopic = async (req, res) => {
   try {
     const { topicId } = req.params;
-    
     const [notes] = await pool.query(`
       SELECT n.id, n.title, n.description, n.created_at, n.topic_id,
-             t.name as topic_name
+             t.name as topic_name, t.description as topic_description, t.unit_id,
+             u.name as unit_name
       FROM notes n
       LEFT JOIN topics t ON n.topic_id = t.id
+      LEFT JOIN units u ON t.unit_id = u.id
       WHERE n.topic_id = ?
       ORDER BY n.created_at DESC
     `, [topicId]);
-
     res.json({
       success: true,
       count: notes.length,
       data: notes
     });
   } catch (error) {
-    console.error('Error fetching notes by topic:', error);
+    console.error("Error fetching notes by topic:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch notes'
+      message: "Failed to fetch notes"
     });
   }
 };
@@ -170,21 +73,21 @@ exports.searchNotes = async (req, res) => {
     if (!q) {
       return res.status(400).json({
         success: false,
-        message: 'Search query is required'
+        message: "Search query is required"
       });
     }
-
     const searchQuery = `%${q}%`;
     
     const [notes] = await pool.query(`
       SELECT n.id, n.title, n.description, n.created_at, n.topic_id,
-             t.name as topic_name, t.color as topic_color
+             t.name as topic_name, t.description as topic_description, t.unit_id,
+             u.name as unit_name
       FROM notes n
       LEFT JOIN topics t ON n.topic_id = t.id
+      LEFT JOIN units u ON t.unit_id = u.id
       WHERE n.title LIKE ? OR n.description LIKE ? OR n.content LIKE ?
       ORDER BY n.created_at DESC
     `, [searchQuery, searchQuery, searchQuery]);
-
     res.json({
       success: true,
       count: notes.length,
@@ -192,10 +95,10 @@ exports.searchNotes = async (req, res) => {
       data: notes
     });
   } catch (error) {
-    console.error('Error searching notes:', error);
+    console.error("Error searching notes:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to search notes'
+      message: "Failed to search notes"
     });
   }
 };
@@ -209,28 +112,28 @@ exports.getNoteById = async (req, res) => {
     const { id } = req.params;
     
     const [notes] = await pool.query(`
-      SELECT n.*, t.name as topic_name, t.color as topic_color
+      SELECT n.*, t.name as topic_name, t.description as topic_description, t.unit_id,
+             u.name as unit_name
       FROM notes n
       LEFT JOIN topics t ON n.topic_id = t.id
+      LEFT JOIN units u ON t.unit_id = u.id
       WHERE n.id = ?
     `, [id]);
-
     if (notes.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Note not found'
+        message: "Note not found"
       });
     }
-
     res.json({
       success: true,
       data: notes[0]
     });
   } catch (error) {
-    console.error('Error fetching note:', error);
+    console.error("Error fetching note:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to fetch note'
+      message: "Failed to fetch note"
     });
   }
 };
@@ -244,33 +147,72 @@ exports.viewNote = async (req, res) => {
     const { id } = req.params;
     
     const [notes] = await pool.query(
-      'SELECT file_path, title FROM notes WHERE id = ?',
+      "SELECT file_path, title FROM notes WHERE id = ?",
       [id]
     );
-
     if (!notes.length || !notes[0].file_path) {
       return res.status(404).json({
         success: false,
-        message: 'Note file not found'
+        message: "Note file not found"
       });
     }
-
     const filePath = path.resolve(notes[0].file_path);
     
     // Check if file exists
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
         success: false,
-        message: 'File not found on server'
+        message: "File not found on server"
+      });
+    }
+    res.sendFile(filePath);
+  } catch (error) {
+    console.error("Error viewing note:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to view note"
+    });
+  }
+};
+
+/**
+ * Create a new note (Admin only)
+ * POST /api/notes
+ */
+exports.createNote = async (req, res) => {
+  try {
+    const { title, description, content, topic_id } = req.body;
+    const filePath = req.file ? req.file.path : null;
+
+    if (!title || !topic_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Note title and topic_id are required"
       });
     }
 
-    res.sendFile(filePath);
+    const [result] = await pool.query(`
+      INSERT INTO notes (title, description, content, topic_id, file_path, created_at)
+      VALUES (?, ?, ?, ?, ?, NOW())
+    `, [title, description || null, content || null, topic_id, filePath]);
+
+    res.status(201).json({
+      success: true,
+      message: "Note created successfully",
+      data: {
+        id: result.insertId,
+        title,
+        description,
+        content,
+        topic_id,
+        file_path: filePath
+      }
+    });
   } catch (error) {
-    console.error('Error viewing note:', error);
+    console.error("Error creating note:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to view note'
+      message: "Failed to create note"
     });
   }
 };
@@ -282,17 +224,15 @@ exports.viewNote = async (req, res) => {
 exports.updateNote = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, topic_id, content } = req.body;
-
-    const [existing] = await pool.query('SELECT * FROM notes WHERE id = ?', [id]);
+    const { title, description, content, topic_id } = req.body;
+    const [existing] = await pool.query("SELECT * FROM notes WHERE id = ?", [id]);
     
     if (existing.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Note not found'
+        message: "Note not found"
       });
     }
-
     let filePath = existing[0].file_path;
     if (req.file) {
       // Delete old file if exists
@@ -301,29 +241,26 @@ exports.updateNote = async (req, res) => {
       }
       filePath = req.file.path;
     }
-
     const sql = `UPDATE notes 
-                 SET title = ?, description = ?, topic_id = ?, content = ?, file_path = ?
+                 SET title = ?, description = ?, content = ?, topic_id = ?, file_path = ?
                  WHERE id = ?`;
-
     await pool.query(sql, [
       title || existing[0].title,
       description !== undefined ? description : existing[0].description,
-      topic_id !== undefined ? topic_id : existing[0].topic_id,
       content !== undefined ? content : existing[0].content,
+      topic_id !== undefined ? topic_id : existing[0].topic_id,
       filePath,
       id
     ]);
-
     res.json({
       success: true,
-      message: 'Note updated successfully'
+      message: "Note updated successfully"
     });
   } catch (error) {
-    console.error('Error updating note:', error);
+    console.error("Error updating note:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to update note'
+      message: "Failed to update note"
     });
   }
 };
@@ -335,32 +272,28 @@ exports.updateNote = async (req, res) => {
 exports.deleteNote = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const [existing] = await pool.query('SELECT file_path FROM notes WHERE id = ?', [id]);
+    const [existing] = await pool.query("SELECT file_path FROM notes WHERE id = ?", [id]);
     
     if (existing.length === 0) {
       return res.status(404).json({
         success: false,
-        message: 'Note not found'
+        message: "Note not found"
       });
     }
-
     // Delete associated file if exists
     if (existing[0].file_path && fs.existsSync(existing[0].file_path)) {
       fs.unlinkSync(existing[0].file_path);
     }
-
-    await pool.query('DELETE FROM notes WHERE id = ?', [id]);
-
+    await pool.query("DELETE FROM notes WHERE id = ?", [id]);
     res.json({
       success: true,
-      message: 'Note deleted successfully'
+      message: "Note deleted successfully"
     });
   } catch (error) {
-    console.error('Error deleting note:', error);
+    console.error("Error deleting note:", error);
     res.status(500).json({
       success: false,
-      message: 'Failed to delete note'
+      message: "Failed to delete note"
     });
   }
 };
