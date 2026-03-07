@@ -19,15 +19,16 @@ export function Navigation() {
 
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-lg">
+      {/* Static Header - Not Fixed */}
+      <nav className="w-full bg-gradient-to-r from-amber-500 to-orange-500 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
-                <Calculator className="w-6 h-6 text-white" />
+            <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
+                <Calculator className="w-6 h-6 text-orange-600" />
               </div>
-              <span className="font-bold text-lg lg:text-xl text-blue-900">
+              <span className="font-bold text-lg lg:text-xl text-white">
                 CampusConnect
               </span>
             </Link>
@@ -40,8 +41,8 @@ export function Navigation() {
                   to={link.href}
                   className={`relative font-medium transition-colors link-underline ${
                     isActive(link.href)
-                      ? 'text-blue-600'
-                      : 'text-gray-700 hover:text-blue-600'
+                      ? 'text-white font-bold'
+                      : 'text-white/90 hover:text-white'
                   }`}
                 >
                   {link.label}
@@ -49,7 +50,7 @@ export function Navigation() {
               ))}
               <Link to="/ask-ai">
                 <Button 
-                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 btn-hover"
+                  className="bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 btn-hover"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
                   Ask AI
@@ -57,9 +58,7 @@ export function Navigation() {
               </Link>
               <Link to="/admin">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  className="border-gray-300 text-gray-600 hover:text-blue-700 hover:border-blue-400"
+                  className="bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
                   <Shield className="w-4 h-4 mr-1.5" />
                   Admin
@@ -70,13 +69,13 @@ export function Navigation() {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="md:hidden p-2 rounded-lg hover:bg-orange-600 transition-colors flex-shrink-0"
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-gray-700" />
+                <X className="w-6 h-6 text-white" />
               ) : (
-                <Menu className="w-6 h-6 text-gray-700" />
+                <Menu className="w-6 h-6 text-white" />
               )}
             </button>
           </div>
@@ -99,7 +98,7 @@ export function Navigation() {
       >
         <div className="p-6">
           <div className="flex items-center justify-between mb-8">
-            <span className="font-bold text-xl text-blue-900">Menu</span>
+            <span className="font-bold text-xl text-orange-600">Menu</span>
             <button
               onClick={() => setIsMobileMenuOpen(false)}
               className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -116,8 +115,8 @@ export function Navigation() {
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={`block py-3 px-4 rounded-xl font-medium transition-all ${
                   isActive(link.href)
-                    ? 'bg-blue-50 text-blue-600'
-                    : 'text-gray-700 hover:bg-gray-50 hover:text-blue-600'
+                    ? 'bg-orange-50 text-orange-600'
+                    : 'text-gray-700 hover:bg-gray-50 hover:text-orange-600'
                 }`}
               >
                 {link.label}
@@ -126,7 +125,7 @@ export function Navigation() {
             <Link
               to="/ask-ai"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-2 py-3 px-4 rounded-xl font-medium bg-gradient-to-r from-orange-500 to-orange-600 text-white hover:from-orange-600 hover:to-orange-700 transition-all"
+              className="flex items-center gap-2 py-3 px-4 rounded-xl font-medium bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600 transition-all"
             >
               <Sparkles className="w-5 h-5" />
               Ask AI
@@ -134,7 +133,7 @@ export function Navigation() {
             <Link
               to="/admin"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex items-center gap-2 py-3 px-4 rounded-xl font-medium border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-blue-600 transition-all"
+              className="flex items-center gap-2 py-3 px-4 rounded-xl font-medium border-2 border-orange-500 text-orange-600 hover:bg-orange-50 transition-all"
             >
               <Shield className="w-5 h-5" />
               Admin Panel
