@@ -3,8 +3,8 @@ import { getAIAnswer } from './aiService';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-const ADMIN_KEY = 'Audi_111K254';
+// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// const ADMIN_KEY = 'Audi_111K254'; // No longer needed with Firebase Storage
 
 // Types
 export interface Topic {
@@ -67,7 +67,7 @@ async function fetchApi<T>(
 
 // ─── UNITS FILE UPLOAD ──────────────────────────────────────────────────────
 
-export async function uploadUnitFile(file: File, unitData: {
+export async function uploadUnitFile(file: File, _unitData: {
   name: string;
   description: string;
   color: string;
@@ -92,7 +92,7 @@ export async function uploadUnitFile(file: File, unitData: {
   }
 }
 
-export async function updateUnitFile(unitId: string, file: File, unitData: {
+export async function updateUnitFile(_unitId: string, file: File, _unitData: {
   name: string;
   description: string;
   color: string;
@@ -144,7 +144,7 @@ export async function uploadTopicFile(file: File, topicData: {
   }
 }
 
-export async function updateTopicFile(topicId: string, file: File, topicData: {
+export async function updateTopicFile(_topicId: string, file: File, topicData: {
   name: string;
   description: string;
   unit_id: string;
