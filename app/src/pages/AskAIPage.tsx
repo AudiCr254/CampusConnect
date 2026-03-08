@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Home, Plus, Search, Brain, Sparkles, User, Bot, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { aiApi } from '@/services/api';
 
 interface Message {
@@ -17,14 +16,13 @@ export function AskAIPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isLoading]);
 
   // Auto-resize textarea
@@ -93,7 +91,7 @@ export function AskAIPage() {
   };
 
   return (
-    <main className="fixed inset-0 flex flex-col bg-[#0a0a0f] text-[#f8fafc] font-sans overflow-hidden">
+    <main className="min-h-screen flex flex-col bg-[#0a0a0f] text-[#f8fafc] font-sans">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute w-[600px] h-[600px] bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] top-[-200px] right-[-200px] rounded-full blur-[80px] opacity-20 animate-pulse" />
@@ -102,7 +100,7 @@ export function AskAIPage() {
       </div>
 
       {/* Header */}
-      <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/10 bg-[#0a0a0f]/50 backdrop-blur-md">
+      <header className="relative z-10 px-6 py-4 flex justify-between items-center border-b border-white/10 bg-[#0a0a0f]/50 backdrop-blur-md sticky top-0">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-gradient-to-br from-[#6366f1] to-[#8b5cf6] rounded-lg flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <Sparkles className="w-5 h-5 text-white" />
@@ -122,7 +120,7 @@ export function AskAIPage() {
       </header>
 
       {/* Chat Container */}
-      <div className="flex-1 relative z-10 overflow-hidden flex flex-col">
+      <div ref={containerRef} className="flex-1 relative z-10 overflow-y-auto flex flex-col">
         {messages.length === 0 ? (
           /* Welcome Screen */
           <div className="flex-1 flex flex-col items-center justify-center p-6 text-center gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -152,10 +150,20 @@ export function AskAIPage() {
                 </button>
               ))}
             </div>
+
+            {/* Developer Details - Fixed at bottom of welcome screen */}
+            <div className="mt-auto pt-8 w-full max-w-2xl">
+              <div className="p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm">
+                <p className="text-xs text-gray-500 mb-2">Powered by CampusConnect AI</p>
+                <p className="text-xs text-gray-600">
+                  Built by <span className="text-indigo-400 font-semibold">Godfrey Audi</span> • Accounting Study Platform
+                </p>
+              </div>
+            </div>
           </div>
         ) : (
           /* Messages List */
-          <ScrollArea className="flex-1 px-6 py-8" ref={scrollRef}>
+          <div className="flex-1 overflow-y-auto px-6 py-8">
             <div className="max-w-3xl mx-auto space-y-8">
               {messages.map((message) => (
                 <div key={message.id} className={`flex gap-5 group animate-in fade-in slide-in-from-left-4 duration-300 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
@@ -193,13 +201,14 @@ export function AskAIPage() {
                   </div>
                 </div>
               )}
+              <div ref={messagesEndRef} />
             </div>
-          </ScrollArea>
+          </div>
         )}
       </div>
 
-      {/* Input Area */}
-      <div className="relative z-20 px-6 pb-10 pt-4 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/90 to-transparent">
+      {/* Input Area - Fixed at bottom */}
+      <div className="relative z-20 px-6 py-6 bg-gradient-to-t from-[#0a0a0f] via-[#0a0a0f]/95 to-transparent border-t border-white/10">
         <div className="max-w-4xl mx-auto space-y-4">
           <div className="relative group">
             <div className="absolute -inset-0.5 bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] rounded-[24px] blur opacity-20 group-focus-within:opacity-40 transition duration-500" />
@@ -237,7 +246,7 @@ export function AskAIPage() {
             </div>
           </div>
           
-          <div className="flex items-center justify-between px-2">
+          <div className="flex items-center justify-between px-2 flex-wrap gap-2">
             <div className="flex items-center gap-3">
               <button className="flex items-center gap-2 px-4 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-xs text-gray-400 transition-all hover:text-white">
                 <Brain className="w-3.5 h-3.5 text-indigo-400" />
@@ -245,7 +254,7 @@ export function AskAIPage() {
               </button>
               <button className="flex items-center gap-2 px-4 py-1.5 bg-indigo-500/10 hover:bg-indigo-500/20 rounded-full border border-indigo-500/20 text-xs text-indigo-400 transition-all">
                 <Search className="w-3.5 h-3.5" />
-                Search
+                Search Notes
               </button>
             </div>
             <span className="text-[10px] text-gray-600 uppercase tracking-widest font-bold">

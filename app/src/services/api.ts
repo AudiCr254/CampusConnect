@@ -1,4 +1,6 @@
 // API Service for CampusConnect Backend
+import { getAIAnswer } from './aiService';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const ADMIN_KEY = 'Audi_111K254';
 
@@ -220,12 +222,27 @@ export const notesApi = {
   getViewUrl: (id: number) => `${API_BASE_URL}/notes/view/${id}`,
 };
 
-// AI API
+// AI API - Now uses local note prioritization with internet fallback
 export const aiApi = {
-  ask: (query: string) => fetchApi<{ answer: string; source: string; relevant_notes: any[] }>('/ai/ask', {
-    method: 'POST',
-    body: JSON.stringify({ query }),
-  }),
+  ask: async (query: string) => {
+    try {
+      const result = await getAIAnswer(query);
+      return {
+        success: true,
+        data: {
+          answer: result.answer,
+          source: result.source,
+          relevant_notes: [],
+        },
+      };
+    } catch (error) {
+      console.error('AI API Error:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to get AI answer',
+      };
+    }
+  },
 };
 
 // Health check
