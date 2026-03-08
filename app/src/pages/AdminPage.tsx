@@ -932,8 +932,10 @@ function NoteFormDialog({
     note_type: 'unit' as 'unit' | 'topic',
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   useEffect(() => {
+    setError('');
     if (editNote) {
       setForm({
         title: editNote.title,
@@ -956,7 +958,18 @@ function NoteFormDialog({
   }, [editNote, selectedUnit, selectedTopic, open]);
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.unit_id) return;
+    setError('');
+    
+    if (!form.title.trim()) {
+      setError('Note title is required');
+      return;
+    }
+    
+    if (!form.unit_id) {
+      setError('Please select a unit for this note');
+      return;
+    }
+    
     setSaving(true);
 
     try {
@@ -973,6 +986,7 @@ function NoteFormDialog({
       onClose();
     } catch (error) {
       console.error('Error saving note:', error);
+      setError('Failed to save note. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -986,6 +1000,13 @@ function NoteFormDialog({
         </DialogHeader>
 
         <div className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-red-700">{error}</p>
+            </div>
+          )}
+          
           <div>
             <Label>Note Title</Label>
             <Input
