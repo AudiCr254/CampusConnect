@@ -1,11 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Sparkles, User, Bot, Loader2, Home } from 'lucide-react';
+import { Send, User, Bot, Loader2, Home, Plus, Menu, Search, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { notesApi } from '@/services/api';
-import { notes as staticNotes } from '@/data/notes';
+import { aiApi } from '@/services/api';
 
 interface Message {
   id: string;
@@ -16,14 +15,7 @@ interface Message {
 
 export function AskAIPage() {
   const navigate = useNavigate();
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 'welcome',
-      role: 'assistant',
-      content: "Hello! I'm your CampusConnect AI assistant. I can help you with accounting concepts, explain topics from your notes, and answer questions about financial statements, recording transactions, depreciation, partnerships, company accounts, and more. What would you like to learn about?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -34,56 +26,6 @@ export function AskAIPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
-
-  const findRelevantContent = async (query: string): Promise<string> => {
-    const lowerQuery = query.toLowerCase();
-    
-    // Try to search from API first
-    try {
-      const searchRes = await notesApi.search(query);
-      if (searchRes.success && searchRes.data && searchRes.data.length > 0) {
-        const note = searchRes.data[0];
-        return `Based on the ${note.topic_name || 'accounting'} notes:\n\n${note.title}:\n${note.content ? note.content.substring(0, 800) : note.description}${(note.content?.length || 0) > 800 ? '...' : ''}`;
-      }
-    } catch (error) {
-      console.log('API search failed, using fallback');
-    }
-
-    // Fallback to static notes
-    const relevantNotes = staticNotes.filter((note) => {
-      const titleMatch = note.title.toLowerCase().includes(lowerQuery);
-      const contentMatch = note.content.toLowerCase().includes(lowerQuery);
-      return titleMatch || contentMatch;
-    });
-
-    if (relevantNotes.length > 0) {
-      const note = relevantNotes[0];
-      return `Based on the accounting notes:\n\n${note.title}:\n${note.content.substring(0, 800)}${note.content.length > 800 ? '...' : ''}`;
-    }
-
-    // Default responses for common accounting questions
-    if (lowerQuery.includes('accounting equation')) {
-      return `The Accounting Equation is the foundation of all accounting:\n\n**Assets = Liabilities + Owner's Equity**\n\nThis equation shows that what a company owns (Assets) is equal to what it owes to creditors (Liabilities) plus what belongs to the owners (Equity). It must always remain in balance after every transaction.`;
-    }
-
-    if (lowerQuery.includes('depreciation')) {
-      return `**Depreciation** is the systematic allocation of the cost of a tangible asset over its useful life.\n\n**Common Methods:**\n1. **Straight Line:** (Cost - Residual Value) / Useful Life\n2. **Reducing Balance:** Fixed % on reducing book value\n3. **Sum of Years' Digits:** Based on remaining life fraction\n\nDepreciation helps match the cost of using an asset with the revenue it generates.`;
-    }
-
-    if (lowerQuery.includes('financial statement')) {
-      return `**Financial Statements** include:\n\n1. **Income Statement (Trading & P&L):** Shows revenue, expenses, and profit/loss\n2. **Statement of Financial Position (Balance Sheet):** Shows assets, liabilities, and equity at a point in time\n3. **Cash Flow Statement:** Shows cash inflows and outflows\n\nThese statements provide a complete picture of a business's financial performance and position.`;
-    }
-
-    if (lowerQuery.includes('partnership')) {
-      return `A **Partnership** is a business owned by two or more persons carrying on business with a view to profit (Partnership Act 1962).\n\n**Key Elements:**\n- Profit sharing ratio\n- Capital contributions\n- Interest on capital and drawings\n- Partner salaries\n- Unlimited liability (for general partners)\n\nPartnership accounts include Appropriation Account to distribute profits.`;
-    }
-
-    if (lowerQuery.includes('share') || lowerQuery.includes('company')) {
-      return `**Types of Share Capital:**\n\n**Ordinary Shares:**\n- Voting rights\n- Variable dividends\n- Last in liquidation\n\n**Preference Shares:**\n- Fixed dividend\n- No voting rights (usually)\n- Paid before ordinary shares\n\n**Issue Terms:**\n- At Par: Issue price = Nominal value\n- At Premium: Issue price > Nominal value\n- At Discount: Issue price < Nominal value (illegal in Kenya)`;
-    }
-
-    return `I don't have specific notes on that topic yet. However, I can help you with:\n\n• Introduction to Accounting\n• Recording Transactions\n• Financial Statements\n• Assets & Liabilities (including Depreciation)\n• Partnership Accounts\n• Company Accounts\n• Manufacturing Accounts\n• Non-Profit Organizations\n• Correction of Errors\n\nTry asking about any of these topics, or browse the Notes section for comprehensive study materials.`;
-  };
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -96,21 +38,34 @@ export function AskAIPage() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input.trim();
     setInput('');
     setIsLoading(true);
 
-    // Get AI response
-    const response = await findRelevantContent(userMessage.content);
-    
-    const assistantMessage: Message = {
-      id: (Date.now() + 1).toString(),
-      role: 'assistant',
-      content: response,
-      timestamp: new Date(),
-    };
+    try {
+      // Call the new AI API that searches both notes and internet
+      const response = await aiApi.ask(currentInput);
+      
+      const assistantMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: response.success && response.data ? response.data.answer : "I'm sorry, I'm having trouble connecting to my brain right now. Please try again later.",
+        timestamp: new Date(),
+      };
 
-    setMessages((prev) => [...prev, assistantMessage]);
-    setIsLoading(false);
+      setMessages((prev) => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error("AI Error:", error);
+      const errorMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: "An error occurred while fetching the answer. Please check your connection.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -120,113 +75,146 @@ export function AskAIPage() {
     }
   };
 
+  const startNewChat = () => {
+    setMessages([]);
+    setInput('');
+  };
+
   return (
-    <main className="fixed inset-0 flex flex-col bg-gradient-to-b from-blue-50 to-white pt-16">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-100 bg-white shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">CampusConnect AI Assistant</h1>
-            <p className="text-xs text-gray-500">Your accounting study companion</p>
-          </div>
+    <main className="fixed inset-0 flex flex-col bg-[#0a0a0a] text-gray-100">
+      {/* Top Navigation Bar */}
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+            <Menu className="w-5 h-5 text-gray-400" />
+          </button>
+          <span className="text-sm font-medium text-gray-300">New chat</span>
         </div>
-        <button
-          onClick={() => navigate('/')}
-          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-        >
-          <Home className="w-5 h-5 text-gray-600" />
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={startNewChat}
+            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+          >
+            <Plus className="w-5 h-5 text-gray-400" />
+          </button>
+          <button 
+            onClick={() => navigate('/')}
+            className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+          >
+            <Home className="w-5 h-5 text-gray-400" />
+          </button>
+        </div>
       </div>
 
-      {/* Chat Container */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Messages Area */}
-        <ScrollArea className="flex-1 px-4 sm:px-6 lg:px-8 py-6" ref={scrollRef}>
-          <div className="max-w-4xl mx-auto space-y-6">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-4 ${
-                  message.role === 'user' ? 'flex-row-reverse' : ''
-                }`}
-              >
+      {/* Main Content Area */}
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {messages.length === 0 ? (
+          /* Initial Empty State */
+          <div className="flex-1 flex flex-col items-center justify-center p-4 animate-in fade-in duration-700">
+            <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/30">
+              <Bot className="w-10 h-10 text-blue-500" />
+            </div>
+            <h2 className="text-2xl font-semibold text-white mb-2">How can I help you?</h2>
+            <p className="text-gray-500 text-center max-w-md">
+              Ask me anything about accounting. I'll check your notes first, then search the web if needed.
+            </p>
+          </div>
+        ) : (
+          /* Chat Messages */
+          <ScrollArea className="flex-1 px-4 py-6" ref={scrollRef}>
+            <div className="max-w-3xl mx-auto space-y-8">
+              {messages.map((message) => (
                 <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    message.role === 'user'
-                      ? 'bg-blue-100'
-                      : 'bg-gradient-to-r from-orange-500 to-orange-600'
+                  key={message.id}
+                  className={`flex gap-4 ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  {message.role === 'user' ? (
-                    <User className="w-4 h-4 text-blue-600" />
-                  ) : (
-                    <Bot className="w-4 h-4 text-white" />
+                  {message.role === 'assistant' && (
+                    <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                      <Bot className="w-5 h-5 text-blue-500" />
+                    </div>
+                  )}
+                  <div
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
+                      message.role === 'user'
+                        ? 'bg-[#2f2f2f] text-white'
+                        : 'text-gray-200'
+                    }`}
+                  >
+                    <div className="whitespace-pre-line text-[15px] leading-relaxed">
+                      {message.content}
+                    </div>
+                  </div>
+                  {message.role === 'user' && (
+                    <div className="w-8 h-8 rounded-lg bg-gray-800 flex items-center justify-center flex-shrink-0">
+                      <User className="w-5 h-5 text-gray-400" />
+                    </div>
                   )}
                 </div>
-                <div
-                  className={`max-w-2xl rounded-2xl px-4 py-3 ${
-                    message.role === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  <div className="whitespace-pre-line text-sm leading-relaxed">
-                    {message.content}
+              ))}
+              {isLoading && (
+                <div className="flex gap-4 justify-start">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600/20 border border-blue-500/30 flex items-center justify-center flex-shrink-0">
+                    <Bot className="w-5 h-5 text-blue-500" />
                   </div>
-                  <div className={`text-xs mt-2 ${
-                    message.role === 'user' 
-                      ? 'text-blue-100' 
-                      : 'text-gray-500'
-                  }`}>
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div className="flex items-center gap-2 text-gray-500">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span className="text-sm">Searching notes & web...</span>
                   </div>
                 </div>
-              </div>
-            ))}
-            {isLoading && (
-              <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-white" />
-                </div>
-                <div className="bg-gray-100 rounded-2xl px-4 py-3 flex items-center gap-2">
-                  <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-                  <span className="text-sm text-gray-500">Thinking...</span>
-                </div>
-              </div>
-            )}
-          </div>
-        </ScrollArea>
+              )}
+            </div>
+          </ScrollArea>
+        )}
 
-        {/* Input Area */}
-        <div className="px-4 sm:px-6 lg:px-8 py-4 border-t border-gray-100 bg-white shadow-lg">
-          <div className="max-w-4xl mx-auto">
-            <div className="flex gap-2">
-              <Input
+        {/* Input Area - Fixed at bottom */}
+        <div className="p-4 sm:p-6">
+          <div className="max-w-3xl mx-auto relative">
+            <div className="relative flex items-end bg-[#1a1a1a] border border-white/10 rounded-[26px] p-2 focus-within:border-white/20 transition-all shadow-2xl">
+              <textarea
+                rows={1}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask me anything about accounting..."
-                className="flex-1 bg-gray-50 border-gray-200 rounded-full px-4"
+                placeholder="Type a message or hold to speak"
+                className="flex-1 bg-transparent border-0 focus:ring-0 text-white placeholder:text-gray-500 py-3 px-4 resize-none max-h-40"
                 disabled={isLoading}
+                style={{ height: 'auto' }}
               />
-              <Button
-                onClick={handleSend}
-                disabled={!input.trim() || isLoading}
-                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-6"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <Send className="w-5 h-5" />
-                )}
-              </Button>
+              <div className="flex items-center gap-2 p-1">
+                <button className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500">
+                  <Plus className="w-5 h-5" />
+                </button>
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  className={`rounded-full w-10 h-10 p-0 flex items-center justify-center transition-all ${
+                    input.trim() 
+                      ? 'bg-white text-black hover:bg-gray-200' 
+                      : 'bg-white/10 text-gray-500'
+                  }`}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <Send className="w-5 h-5" />
+                  )}
+                </Button>
+              </div>
             </div>
-            <p className="text-xs text-gray-400 mt-2 text-center">
-              AI responses are based on CampusConnect accounting notes
-            </p>
+            
+            {/* Bottom Action Buttons (Simulated from image) */}
+            <div className="flex items-center gap-2 mt-3 px-2">
+              <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-xs text-gray-400 transition-all">
+                <Brain className="w-3.5 h-3.5" />
+                Think
+              </button>
+              <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 rounded-full border border-blue-500/30 text-xs text-blue-400 transition-all">
+                <Search className="w-3.5 h-3.5" />
+                Search
+              </button>
+            </div>
           </div>
         </div>
       </div>

@@ -220,11 +220,20 @@ export const notesApi = {
   getViewUrl: (id: number) => `${API_BASE_URL}/notes/view/${id}`,
 };
 
+// AI API
+export const aiApi = {
+  ask: (query: string) => fetchApi<{ answer: string; source: string; relevant_notes: any[] }>('/ai/ask', {
+    method: 'POST',
+    body: JSON.stringify({ query }),
+  }),
+};
+
 // Health check
 export const healthCheck = () => fetchApi<{ timestamp: string }>('/health');
 
 export default {
   topics: topicsApi,
   notes: notesApi,
+  ai: aiApi,
   health: healthCheck,
 };

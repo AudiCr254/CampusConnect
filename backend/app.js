@@ -6,6 +6,7 @@ require("dotenv").config();
 const noteRoutes = require("./routes/noteRoutes");
 const unitRoutes = require("./routes/unitRoutes"); // Changed from topicRoutes
 const topicRoutes = require("./routes/topicRoutes"); // New topic routes
+const aiRoutes = require("./routes/aiRoutes"); // New AI routes
 const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
@@ -40,6 +41,7 @@ app.get("/api/health", (req, res) => {
 app.use("/api", noteRoutes);
 app.use("/api", unitRoutes); // Changed from topicRoutes
 app.use("/api", topicRoutes); // New topic routes
+app.use("/api", aiRoutes); // New AI routes
 
 // 404 handler
 app.use((req, res) => {
