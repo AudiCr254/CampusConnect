@@ -19,6 +19,7 @@ export function AskAIPage() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Auto-scroll to bottom
   useEffect(() => {
@@ -26,6 +27,14 @@ export function AskAIPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages]);
+
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [input]);
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
@@ -83,7 +92,7 @@ export function AskAIPage() {
   return (
     <main className="fixed inset-0 flex flex-col bg-[#0a0a0a] text-gray-100">
       {/* Top Navigation Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/5 bg-[#0a0a0a]">
         <div className="flex items-center gap-4">
           <button className="p-2 hover:bg-white/5 rounded-lg transition-colors">
             <Menu className="w-5 h-5 text-gray-400" />
@@ -106,23 +115,23 @@ export function AskAIPage() {
         </div>
       </div>
 
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col overflow-hidden">
         {messages.length === 0 ? (
           /* Initial Empty State */
           <div className="flex-1 flex flex-col items-center justify-center p-4 animate-in fade-in duration-700">
             <div className="w-16 h-16 bg-blue-600/20 rounded-2xl flex items-center justify-center mb-6 border border-blue-500/30">
               <Bot className="w-10 h-10 text-blue-500" />
             </div>
-            <h2 className="text-2xl font-semibold text-white mb-2">How can I help you?</h2>
-            <p className="text-gray-500 text-center max-w-md">
+            <h2 className="text-3xl font-semibold text-white mb-2">How can I help you?</h2>
+            <p className="text-gray-500 text-center max-w-md text-sm">
               Ask me anything about accounting. I'll check your notes first, then search the web if needed.
             </p>
           </div>
         ) : (
           /* Chat Messages */
           <ScrollArea className="flex-1 px-4 py-6" ref={scrollRef}>
-            <div className="max-w-3xl mx-auto space-y-8">
+            <div className="max-w-3xl mx-auto space-y-6">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -167,54 +176,51 @@ export function AskAIPage() {
             </div>
           </ScrollArea>
         )}
+      </div>
 
-        {/* Input Area - Fixed at bottom */}
-        <div className="p-4 sm:p-6">
-          <div className="max-w-3xl mx-auto relative">
-            <div className="relative flex items-end bg-[#1a1a1a] border border-white/10 rounded-[26px] p-2 focus-within:border-white/20 transition-all shadow-2xl">
-              <textarea
-                rows={1}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Type a message or hold to speak"
-                className="flex-1 bg-transparent border-0 focus:ring-0 text-white placeholder:text-gray-500 py-3 px-4 resize-none max-h-40"
-                disabled={isLoading}
-                style={{ height: 'auto' }}
-              />
-              <div className="flex items-center gap-2 p-1">
-                <button className="p-2 hover:bg-white/5 rounded-full transition-colors text-gray-500">
-                  <Plus className="w-5 h-5" />
-                </button>
-                <Button
-                  onClick={handleSend}
-                  disabled={!input.trim() || isLoading}
-                  className={`rounded-full w-10 h-10 p-0 flex items-center justify-center transition-all ${
-                    input.trim() 
-                      ? 'bg-white text-black hover:bg-gray-200' 
-                      : 'bg-white/10 text-gray-500'
-                  }`}
-                >
-                  {isLoading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Send className="w-5 h-5" />
-                  )}
-                </Button>
-              </div>
-            </div>
-            
-            {/* Bottom Action Buttons (Simulated from image) */}
-            <div className="flex items-center gap-2 mt-3 px-2">
-              <button className="flex items-center gap-2 px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-xs text-gray-400 transition-all">
-                <Brain className="w-3.5 h-3.5" />
-                Think
-              </button>
-              <button className="flex items-center gap-2 px-3 py-1.5 bg-blue-600/20 hover:bg-blue-600/30 rounded-full border border-blue-500/30 text-xs text-blue-400 transition-all">
-                <Search className="w-3.5 h-3.5" />
-                Search
-              </button>
-            </div>
+      {/* Bottom Input Area - Fixed */}
+      <div className="border-t border-white/5 bg-[#0a0a0a] px-4 py-4 sm:py-6">
+        <div className="max-w-3xl mx-auto space-y-3">
+          {/* Main Input Box */}
+          <div className="relative flex items-end gap-2 bg-[#1a1a1a] border border-white/10 rounded-2xl p-3 focus-within:border-white/20 transition-all shadow-lg hover:border-white/15">
+            <textarea
+              ref={textareaRef}
+              rows={1}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Type a message or hold to speak"
+              className="flex-1 bg-transparent border-0 focus:ring-0 text-white placeholder:text-gray-500 py-2 px-1 resize-none max-h-32 outline-none"
+              disabled={isLoading}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || isLoading}
+              className={`rounded-full w-10 h-10 p-0 flex items-center justify-center flex-shrink-0 transition-all ${
+                input.trim() 
+                  ? 'bg-white text-black hover:bg-gray-200 cursor-pointer' 
+                  : 'bg-white/10 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {isLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )}
+            </Button>
+          </div>
+
+          {/* Bottom Action Buttons */}
+          <div className="flex items-center gap-2 px-1">
+            <button className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-full border border-white/10 text-xs text-gray-400 transition-all">
+              <Brain className="w-4 h-4" />
+              Think
+            </button>
+            <button className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 rounded-full border border-blue-500/30 text-xs text-blue-400 transition-all">
+              <Search className="w-4 h-4" />
+              Search
+            </button>
+            <span className="text-xs text-gray-600 ml-auto">AI responses based on your notes</span>
           </div>
         </div>
       </div>
