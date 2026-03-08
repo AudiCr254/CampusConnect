@@ -3,7 +3,7 @@ import { getAIAnswer } from './aiService';
 import { storage } from '@/lib/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
-// const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 // const ADMIN_KEY = 'Audi_111K254'; // No longer needed with Firebase Storage
 
 // Types
