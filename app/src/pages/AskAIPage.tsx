@@ -151,15 +151,7 @@ export function AskAIPage() {
               ))}
             </div>
 
-            {/* Developer Details - Fixed at bottom of welcome screen */}
-            <div className="mt-auto pt-8 w-full max-w-2xl">
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10 backdrop-blur-sm">
-                <p className="text-xs text-gray-500 mb-2">Powered by CampusConnect AI</p>
-                <p className="text-xs text-gray-600">
-                  Built by <span className="text-indigo-400 font-semibold">Godfrey Audi</span> • Accounting Study Platform
-                </p>
-              </div>
-            </div>
+
           </div>
         ) : (
           /* Messages List */
