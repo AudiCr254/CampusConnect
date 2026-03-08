@@ -1,5 +1,7 @@
 // API Service for CampusConnect Backend
 import { getAIAnswer } from './aiService';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 const ADMIN_KEY = 'Audi_111K254';
@@ -71,26 +73,19 @@ export async function uploadUnitFile(file: File, unitData: {
   color: string;
 }): Promise<{ file_path: string }> {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('name', unitData.name);
-    formData.append('description', unitData.description);
-    formData.append('color', unitData.color);
+    // Create a unique file path in Firebase Storage
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name}`;
+    const filePath = `units/${fileName}`;
+    const fileRef = ref(storage, filePath);
 
-    const response = await fetch(`${API_BASE_URL}/units`, {
-      method: 'POST',
-      headers: {
-        'x-admin-key': ADMIN_KEY,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload unit file');
-    }
-
-    const data = await response.json();
-    return { file_path: data.data.file_path };
+    // Upload file to Firebase Storage
+    await uploadBytes(fileRef, file);
+    
+    // Get download URL
+    const downloadURL = await getDownloadURL(fileRef);
+    
+    return { file_path: downloadURL };
   } catch (error) {
     console.error('Error uploading unit file:', error);
     throw error;
@@ -103,26 +98,19 @@ export async function updateUnitFile(unitId: string, file: File, unitData: {
   color: string;
 }): Promise<{ file_path: string }> {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('name', unitData.name);
-    formData.append('description', unitData.description);
-    formData.append('color', unitData.color);
+    // Create a unique file path in Firebase Storage
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name}`;
+    const filePath = `units/${fileName}`;
+    const fileRef = ref(storage, filePath);
 
-    const response = await fetch(`${API_BASE_URL}/units/${unitId}`, {
-      method: 'PUT',
-      headers: {
-        'x-admin-key': ADMIN_KEY,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update unit file');
-    }
-
-    const data = await response.json();
-    return { file_path: data.data?.file_path || '' };
+    // Upload file to Firebase Storage
+    await uploadBytes(fileRef, file);
+    
+    // Get download URL
+    const downloadURL = await getDownloadURL(fileRef);
+    
+    return { file_path: downloadURL };
   } catch (error) {
     console.error('Error updating unit file:', error);
     throw error;
@@ -137,26 +125,19 @@ export async function uploadTopicFile(file: File, topicData: {
   unit_id: string;
 }): Promise<{ file_path: string }> {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('name', topicData.name);
-    formData.append('description', topicData.description);
-    formData.append('unit_id', topicData.unit_id);
+    // Create a unique file path in Firebase Storage
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name}`;
+    const filePath = `topics/${topicData.unit_id}/${fileName}`;
+    const fileRef = ref(storage, filePath);
 
-    const response = await fetch(`${API_BASE_URL}/topics`, {
-      method: 'POST',
-      headers: {
-        'x-admin-key': ADMIN_KEY,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to upload topic file');
-    }
-
-    const data = await response.json();
-    return { file_path: data.data.file_path };
+    // Upload file to Firebase Storage
+    await uploadBytes(fileRef, file);
+    
+    // Get download URL
+    const downloadURL = await getDownloadURL(fileRef);
+    
+    return { file_path: downloadURL };
   } catch (error) {
     console.error('Error uploading topic file:', error);
     throw error;
@@ -169,26 +150,19 @@ export async function updateTopicFile(topicId: string, file: File, topicData: {
   unit_id: string;
 }): Promise<{ file_path: string }> {
   try {
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('name', topicData.name);
-    formData.append('description', topicData.description);
-    formData.append('unit_id', topicData.unit_id);
+    // Create a unique file path in Firebase Storage
+    const timestamp = Date.now();
+    const fileName = `${timestamp}_${file.name}`;
+    const filePath = `topics/${topicData.unit_id}/${fileName}`;
+    const fileRef = ref(storage, filePath);
 
-    const response = await fetch(`${API_BASE_URL}/topics/${topicId}`, {
-      method: 'PUT',
-      headers: {
-        'x-admin-key': ADMIN_KEY,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to update topic file');
-    }
-
-    const data = await response.json();
-    return { file_path: data.data?.file_path || '' };
+    // Upload file to Firebase Storage
+    await uploadBytes(fileRef, file);
+    
+    // Get download URL
+    const downloadURL = await getDownloadURL(fileRef);
+    
+    return { file_path: downloadURL };
   } catch (error) {
     console.error('Error updating topic file:', error);
     throw error;
