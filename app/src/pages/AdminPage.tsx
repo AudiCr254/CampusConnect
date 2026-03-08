@@ -568,7 +568,12 @@ function UnitFormDialog({
 
   useEffect(() => {
     if (editUnit) {
-      setForm(editUnit);
+      setForm({
+        name: editUnit.name,
+        description: editUnit.description,
+        color: editUnit.color,
+        file_path: editUnit.file_path || '',
+      });
     } else {
       setForm({ name: '', description: '', color: '#3b82f6', file_path: '' });
     }
@@ -742,7 +747,13 @@ function TopicFormDialog({
 
   useEffect(() => {
     if (editTopic) {
-      setForm(editTopic);
+      setForm({
+        name: editTopic.name,
+        description: editTopic.description,
+        color: editTopic.color,
+        unit_id: editTopic.unit_id,
+        file_path: editTopic.file_path || '',
+      });
     } else {
       setForm({ name: '', description: '', color: '#10b981', unit_id: selectedUnit?.id || '', file_path: '' });
     }

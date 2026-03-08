@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Send, Home, Plus, Menu, Search, Brain, Sparkles, User, Bot, Loader2 } from 'lucide-react';
+import { Send, Home, Plus, Search, Brain, Sparkles, User, Bot, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { aiApi } from '@/services/api';

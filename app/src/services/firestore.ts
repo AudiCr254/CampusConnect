@@ -13,12 +13,21 @@ import {
 
 // ─── UNITS (Top-level categories) ───────────────────────────────────────────
 
+export interface FileMetadata {
+  name: string;
+  url: string;
+  size: number;
+  type: string;
+  uploadedAt: string;
+}
+
 export interface Unit {
   id: string;
   name: string;
   description: string;
   color: string;
-  file_path?: string; // Path to uploaded file
+  file?: FileMetadata; // Optional file metadata
+  file_path?: string; // Legacy path support
   created_at: string;
 }
 
@@ -79,7 +88,8 @@ export interface Topic {
   name: string;
   description: string;
   color: string;
-  file_path?: string; // Path to uploaded file
+  file?: FileMetadata; // Optional file metadata
+  file_path?: string; // Legacy path support
   created_at: string;
 }
 
@@ -149,6 +159,7 @@ export interface Note {
   description: string;
   content: string;
   note_type: 'unit' | 'topic'; // Indicates if this is a unit-level or topic-level note
+  file?: FileMetadata; // Optional file attached to the note
   created_at: string;
 }
 
