@@ -25,7 +25,7 @@ export function Navigation() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
-              <img src="/logo-header.png" alt="CampusConnect Logo" className="w-10 h-10 rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-200" />
+              <img src={`${import.meta.env.BASE_URL}logo-header.png`} alt="CampusConnect Logo" className="w-10 h-10 rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-200" />
               <span className="font-bold text-lg lg:text-xl text-white">
                 CampusConnect
               </span>
