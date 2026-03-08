@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Calculator, Twitter, Linkedin, Github, Heart } from 'lucide-react';
+import { Twitter, Linkedin, Github, Heart } from 'lucide-react';
 import audiGodfreyImg from '@/assets/audi-godfrey.jpg';
 import audiLogoImg from '@/assets/audi-logo.png';
 
@@ -24,9 +24,7 @@ export function Footer() {
           {/* Brand Column */}
           <div className="lg:col-span-1">
             <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
-                <Calculator className="w-6 h-6 text-white" />
-              </div>
+              <img src="/logo-header.png" alt="CampusConnect Logo" className="w-10 h-10 rounded-xl" />
               <span className="font-bold text-xl">CampusConnect</span>
             </Link>
             <p className="text-blue-200 text-sm leading-relaxed mb-6">

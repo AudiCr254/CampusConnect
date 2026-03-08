@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Calculator, Sparkles, Shield } from 'lucide-react';
+import { Menu, X, Sparkles, Shield } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const navLinks = [
@@ -25,9 +25,7 @@ export function Navigation() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group flex-shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform duration-200">
-                <Calculator className="w-6 h-6 text-orange-600" />
-              </div>
+              <img src="/logo-header.png" alt="CampusConnect Logo" className="w-10 h-10 rounded-xl shadow-lg group-hover:scale-105 transition-transform duration-200" />
               <span className="font-bold text-lg lg:text-xl text-white">
                 CampusConnect
               </span>
@@ -53,16 +51,16 @@ export function Navigation() {
                   className="bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300 btn-hover"
                 >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Ask AI
-                </Button>
+              Ask AI
+            </Button>
               </Link>
               <Link to="/admin">
                 <Button
                   className="bg-white text-orange-600 hover:bg-orange-50 font-semibold shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  <Shield className="w-4 h-4 mr-1.5" />
-                  Admin
-                </Button>
+              <Shield className="w-4 h-4 mr-1.5" />
+              Admin
+            </Button>
               </Link>
             </div>
 
