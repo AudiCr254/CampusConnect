@@ -54,57 +54,14 @@ jobs:
           path: './app/dist'
 
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     
     steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: github-pages
-          path: ./dist-artifact
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          ref: gh-pages
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract and deploy
-        run: |
-          set -e
-          echo "Current directory: $(pwd)"
-          echo "Contents of dist-artifact:"
-          ls -la dist-artifact/ || echo "dist-artifact directory not found"
-          
-          cd dist-artifact
-          echo "Extracting tar file..."
-          tar -xzf artifact.tar
-          echo "Tar extraction complete"
-          echo "Contents after extraction:"
-          ls -la
-          
-          cd ..
-          echo "Removing old files..."
-          find . -maxdepth 1 -type f -delete
-          find . -maxdepth 1 -type d ! -name . ! -name dist-artifact -exec rm -rf {} + 2>/dev/null || true
-          
-          echo "Moving new files..."
-          mv dist-artifact/* .
-          rm -rf dist-artifact
-          echo "Deploy extraction complete"
-          echo "Final directory contents:"
-          ls -la
-
-      - name: Commit and push
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "Deploy to GitHub Pages"
-            git push origin gh-pages
-          fi
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
