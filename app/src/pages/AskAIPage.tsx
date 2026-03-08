@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, Sparkles, User, Bot, Loader2, BookOpen } from 'lucide-react';
+import { Send, Sparkles, User, Bot, Loader2, Home } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -13,15 +13,6 @@ interface Message {
   content: string;
   timestamp: Date;
 }
-
-const suggestedQuestions = [
-  'What is the accounting equation?',
-  'Explain the different types of depreciation methods',
-  'How do you prepare a trading account?',
-  'What are the users of accounting information?',
-  'Explain partnership profit sharing',
-  'What is the difference between shares issued at par and at premium?',
-];
 
 export function AskAIPage() {
   const navigate = useNavigate();
@@ -129,117 +120,102 @@ export function AskAIPage() {
     }
   };
 
-  const handleSuggestedQuestion = (question: string) => {
-    setInput(question);
-  };
-
   return (
-    <main className="min-h-screen pt-20 pb-4 bg-slate-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 h-[calc(100vh-6rem)]">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
-          <button
-            onClick={() => navigate('/')}
-            className="p-2 hover:bg-gray-200 rounded-lg transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
-          </button>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-gray-900">CampusConnect AI</h1>
-              <p className="text-sm text-gray-500">Your accounting study assistant</p>
-            </div>
+    <main className="fixed inset-0 flex flex-col bg-gradient-to-b from-blue-50 to-white pt-16">
+      {/* Header */}
+      <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 py-4 border-b border-gray-100 bg-white shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">CampusConnect AI Assistant</h1>
+            <p className="text-xs text-gray-500">Your accounting study companion</p>
           </div>
         </div>
+        <button
+          onClick={() => navigate('/')}
+          className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+        >
+          <Home className="w-5 h-5 text-gray-600" />
+        </button>
+      </div>
 
-        {/* Chat Container */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 h-full flex flex-col overflow-hidden">
-          {/* Messages */}
-          <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-            <div className="space-y-4">
-              {messages.map((message) => (
+      {/* Chat Container */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Messages Area */}
+        <ScrollArea className="flex-1 px-4 sm:px-6 lg:px-8 py-6" ref={scrollRef}>
+          <div className="max-w-4xl mx-auto space-y-6">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-4 ${
+                  message.role === 'user' ? 'flex-row-reverse' : ''
+                }`}
+              >
                 <div
-                  key={message.id}
-                  className={`flex gap-3 ${
-                    message.role === 'user' ? 'flex-row-reverse' : ''
+                  className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                    message.role === 'user'
+                      ? 'bg-blue-100'
+                      : 'bg-gradient-to-r from-orange-500 to-orange-600'
                   }`}
                 >
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.role === 'user'
-                        ? 'bg-blue-100'
-                        : 'bg-gradient-to-r from-orange-500 to-orange-600'
-                    }`}
-                  >
-                    {message.role === 'user' ? (
-                      <User className="w-4 h-4 text-blue-600" />
-                    ) : (
-                      <Bot className="w-4 h-4 text-white" />
-                    )}
-                  </div>
-                  <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-3 ${
-                      message.role === 'user'
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-100 text-gray-800'
-                    }`}
-                  >
-                    <div className="whitespace-pre-line text-sm leading-relaxed">
-                      {message.content}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center">
+                  {message.role === 'user' ? (
+                    <User className="w-4 h-4 text-blue-600" />
+                  ) : (
                     <Bot className="w-4 h-4 text-white" />
+                  )}
+                </div>
+                <div
+                  className={`max-w-2xl rounded-2xl px-4 py-3 ${
+                    message.role === 'user'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-100 text-gray-800'
+                  }`}
+                >
+                  <div className="whitespace-pre-line text-sm leading-relaxed">
+                    {message.content}
                   </div>
-                  <div className="bg-gray-100 rounded-2xl px-4 py-3 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
-                    <span className="text-sm text-gray-500">Thinking...</span>
+                  <div className={`text-xs mt-2 ${
+                    message.role === 'user' 
+                      ? 'text-blue-100' 
+                      : 'text-gray-500'
+                  }`}>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
                 </div>
-              )}
-            </div>
-
-            {/* Suggested Questions */}
-            {messages.length === 1 && (
-              <div className="mt-6">
-                <p className="text-sm text-gray-500 mb-3">Suggested questions:</p>
-                <div className="flex flex-wrap gap-2">
-                  {suggestedQuestions.map((question, index) => (
-                    <button
-                      key={index}
-                      onClick={() => handleSuggestedQuestion(question)}
-                      className="px-3 py-2 bg-white border border-gray-200 rounded-lg text-sm text-gray-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 transition-all"
-                    >
-                      {question}
-                    </button>
-                  ))}
+              </div>
+            ))}
+            {isLoading && (
+              <div className="flex gap-4">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-r from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 text-white" />
+                </div>
+                <div className="bg-gray-100 rounded-2xl px-4 py-3 flex items-center gap-2">
+                  <Loader2 className="w-4 h-4 animate-spin text-gray-500" />
+                  <span className="text-sm text-gray-500">Thinking...</span>
                 </div>
               </div>
             )}
-          </ScrollArea>
+          </div>
+        </ScrollArea>
 
-          {/* Input Area */}
-          <div className="p-4 border-t border-gray-100 bg-gray-50">
+        {/* Input Area */}
+        <div className="px-4 sm:px-6 lg:px-8 py-4 border-t border-gray-100 bg-white shadow-lg">
+          <div className="max-w-4xl mx-auto">
             <div className="flex gap-2">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={handleKeyDown}
-                placeholder="Ask about accounting topics..."
-                className="flex-1 bg-white border-gray-200"
+                placeholder="Ask me anything about accounting..."
+                className="flex-1 bg-gray-50 border-gray-200 rounded-full px-4"
                 disabled={isLoading}
               />
               <Button
                 onClick={handleSend}
                 disabled={!input.trim() || isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
+                className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white rounded-full px-6"
               >
                 {isLoading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -252,17 +228,6 @@ export function AskAIPage() {
               AI responses are based on CampusConnect accounting notes
             </p>
           </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="mt-4 flex items-center justify-center gap-4 text-sm">
-          <button
-            onClick={() => navigate('/notes')}
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            <BookOpen className="w-4 h-4" />
-            Browse Notes
-          </button>
         </div>
       </div>
     </main>
