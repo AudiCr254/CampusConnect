@@ -1,11 +1,17 @@
-import { fetchNotes, type Note } from './firestore';
+import { getAllNotes, searchNotes, type Note } from './supabaseReadService';
 
 /**
  * Search notes for relevant content based on a query
  */
 export async function searchNotesForAnswer(query: string): Promise<Note[]> {
   try {
-    const allNotes = await fetchNotes();
+    // First try Supabase full-text search
+    let allNotes = await searchNotes(query);
+    
+    // If no results, fall back to fetching all notes
+    if (allNotes.length === 0) {
+      allNotes = await getAllNotes();
+    }
     
     // Convert query to lowercase for case-insensitive search
     const queryLower = query.toLowerCase();
