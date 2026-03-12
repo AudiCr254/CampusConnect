@@ -42,13 +42,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import { 
-  fetchUnits, addUnit, updateUnit, deleteUnit,
-  fetchTopics, addTopic, updateTopic, deleteTopic,
-  fetchNotes, addNote, updateNote, deleteNote,
-  type Unit, type Topic, type Note 
-} from '@/services/firestore';
-import { uploadUnitFile, updateUnitFile, uploadTopicFile, updateTopicFile } from '@/services/api';
+import {
+  addUnit, getUnits, deleteUnit,
+  addTopic, getTopics, deleteTopic,
+  addNote, getNotes, deleteNote,
+  type Unit, type Topic, type Note
+} from '@/services/supabaseService';
 
 const ADMIN_KEY = 'Audi_111K254';
 
@@ -167,16 +166,16 @@ function AdminDashboard({ onLogout }: { onLogout: () => void }) {
     setError('');
     try {
       const [unitsData, topicsData, notesData] = await Promise.all([
-        fetchUnits(),
-        fetchTopics(),
-        fetchNotes(),
+        getUnits(),
+        getTopics(''),
+        getNotes(''),
       ]);
       setUnits(unitsData);
       setTopics(topicsData);
       setNotes(notesData);
     } catch (err) {
       console.error('Error fetching data:', err);
-      setError('Failed to load data from Firestore');
+      setError('Failed to load data from Supabase');
     } finally {
       setLoading(false);
     }
@@ -593,7 +592,7 @@ function UnitFormDialog({
       if (file) {
         try {
           if (editUnit) {
-            const result = await updateUnitFile(editUnit.id, file, {
+            const result = await // updateUnitFile(editUnit.id, file, {
               name: form.name,
               description: form.description,
               color: form.color,
@@ -627,7 +626,7 @@ function UnitFormDialog({
       }
       
       if (editUnit) {
-        await updateUnit(editUnit.id, { ...form, file_path: filePath } as Partial<Unit>);
+        await // updateUnit(editUnit.id, { ...form, file_path: filePath } as Partial<Unit>);
       } else {
         await addUnit({
           ...form,
@@ -773,7 +772,7 @@ function TopicFormDialog({
       if (file) {
         try {
           if (editTopic) {
-            const result = await updateTopicFile(editTopic.id, file, {
+            const result = await // updateTopicFile(editTopic.id, file, {
               name: form.name,
               description: form.description,
               unit_id: form.unit_id,
@@ -808,7 +807,7 @@ function TopicFormDialog({
       }
       
       if (editTopic) {
-        await updateTopic(editTopic.id, { ...form, file_path: filePath } as Partial<Topic>);
+        await // updateTopic(editTopic.id, { ...form, file_path: filePath } as Partial<Topic>);
       } else {
         await addTopic({
           ...form,
@@ -974,7 +973,7 @@ function NoteFormDialog({
 
     try {
       if (editNote) {
-        await updateNote(editNote.id, form as Partial<Note>);
+        await // updateNote(editNote.id, form as Partial<Note>);
       } else {
         await addNote({
           ...form,
