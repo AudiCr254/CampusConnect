@@ -34,7 +34,7 @@ jobs:
         working-directory: ./app
         run: npm install
 
-      - name: Create .env.production file with secrets
+      - name: Create .env.production file
         working-directory: ./app
         run: |
           echo "VITE_HF_API_KEY=${{ secrets.HF_API_KEY }}" > .env.production
