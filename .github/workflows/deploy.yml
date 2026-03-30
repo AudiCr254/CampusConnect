@@ -34,14 +34,14 @@ jobs:
         working-directory: ./app
         run: npm install
 
-      - name: Create .env file with secrets
+      - name: Create .env.production file with secrets
         working-directory: ./app
         run: |
-          echo "VITE_HF_API_KEY=${{ secrets.HF_API_KEY }}" > .env
-          echo "VITE_HF_MODEL=google/flan-t5-base" >> .env
-          echo "VITE_API_URL=http://localhost:5000/api" >> .env
-          echo "VITE_SUPABASE_URL=https://uftrfyuuljybaujjrkrh.supabase.co" >> .env
-          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env
+          echo "VITE_HF_API_KEY=${{ secrets.HF_API_KEY }}" > .env.production
+          echo "VITE_HF_MODEL=google/flan-t5-base" >> .env.production
+          echo "VITE_API_URL=http://localhost:5000/api" >> .env.production
+          echo "VITE_SUPABASE_URL=https://uftrfyuuljybaujjrkrh.supabase.co" >> .env.production
+          echo "VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}" >> .env.production
 
       - name: Build the app
         working-directory: ./app
