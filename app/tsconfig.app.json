@@ -30,6 +30,6 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src", "env.d.ts"],
+  "include": ["src"],
   "exclude": [".env.production"]
 }
